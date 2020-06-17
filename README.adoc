@@ -1,0 +1,6 @@
+= spring-boot-api-sample
+
+A demo about how to write a Spring Boot API.
+
+Designed to explain some concepts to Brazilian guys in Brazilian portuguese (pt-br). +
+So, link:README.pt-br.adoc[here I have a more complete documentation about this project].

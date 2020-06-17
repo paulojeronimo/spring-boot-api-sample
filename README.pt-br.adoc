@@ -1,0 +1,303 @@
+= spring-boot-api-sample
+Paulo Jerônimo <paulojeronimo@gmail.com>
+:toc:
+:toc-title: Conteúdo
+:toclevels: 4
+:icons: font
+ifdef::backend-html5[]
+:TODO: pass:[<strong><spam style="color:red">TODO</spam></strong>]
+endif::[]
+ifdef::backend-pdf[]
+:TODO: TODO
+endif::[]
+
+Este exemplo demonstra a criação de uma *API RESTful (e HATEOAS) utilizando o Spring Boot 2.3.1 e o Java 14*.
+
+Essa é a primeira versão de um tutorial que estou criando para começar a explorar,
+aos poucos, as novas funcionalidades do Spring Boot 2.3 que o Phill Webb descreve
+em seu vídeo https://www.youtube.com/watch?v=WL7U-yGfUXA["Whats New in Spring Boot 2.3"^].
+
+Essa versão do tutorial, contudo, ainda não demonstra nada de especial e específico a versão 2.3 do Spring Boot. Meu intuito é, inicialmente, preparar um ambiente onde crio uma aplicação básica com a qual demonstro soluções, problemas e incompatibilidades relativas ao uso dessa versão do Spring Boot (e do Java). Em próximas versões deste tutorial detalharei novidades oferecidas pelo Spring Boot e como elas podem fornecer um código melhorado para o apresentado neste tutorial.
+
+== Software (e versões) utilizados no(s) ambiente(s) de desenvolvimento desta aplicação
+
+Ambiente MacOS: ::
++
+----
+$ sw_vers
+ProductName:	Mac OS X
+ProductVersion:	10.15.5
+BuildVersion:	19F101
+
+$ echo $BASH_VERSION
+5.0.17(1)-release
+
+$ docker -v
+Docker version 19.03.8, build afacb8b
+
+$ docker-compose -v
+docker-compose version 1.25.5, build 8a1c60f6
+----
+
+Ambiente Linux (Arch Linux https://www.youtube.com/watch?v=gvBPrkDqXGs&list=PL2UgI3aRNe-hdGSDDhP1KrL3aHfiCWbwG&index=3[executado numa VM^]): ::
+
+{TODO}
+
+Ambiente Java (instalado e gerenciado pelo https://sdkman.io/[SDKMAN^]): ::
++
+----
+$ sdk version
+
+SDKMAN 5.8.3+506
+
+$ java -version
+openjdk version "14.0.1" 2020-04-14
+OpenJDK Runtime Environment (build 14.0.1+7)
+OpenJDK 64-Bit Server VM (build 14.0.1+7, mixed mode, sharing)
+
+$ mvn -v
+Apache Maven 3.6.3 (cecedd343002696d0abb50b32b541b8a6ba2883f)
+Maven home: /Users/pj/.sdkman/candidates/maven/current
+Java version: 14.0.1, vendor: Oracle Corporation, runtime: /Users/pj/.sdkman/candidates/java/14.0.1-open
+Default locale: en_BR, platform encoding: UTF-8
+OS name: "mac os x", version: "10.15.5", arch: "x86_64", family: "mac"
+
+$ groovy --version
+Groovy Version: 3.0.4 JVM: 14.0.1 Vendor: Oracle Corporation OS: Mac OS X
+
+$ gradle -v
+Gradle 6.5
+
+Build time:   2020-06-02 20:46:21 UTC
+Revision:     a27f41e4ae5e8a41ab9b19f8dd6d86d7b384dad4
+
+Kotlin:       1.3.72
+Groovy:       2.5.11
+Ant:          Apache Ant(TM) version 1.10.7 compiled on September 1 2019
+JVM:          14.0.1 (Oracle Corporation 14.0.1+7)
+OS:           Mac OS X 10.15.5 x86_64
+----
+
+== Compilação (e inicialização do projeto)
+
+Para compilar esta aplicação, e colocá-la em execução, há duas (2) alternativas.
+
+=== Ambiente de desenvolvimento (exige a instalação do Maven e do Java no ambiente)
+
+Neste ambiente a idéia é iniciar o projeto via Maven,
+ou preferencialmente através de um IDE, facilitando o desenvolvimento ou a correção de bugs. Dessa forma, não é necessária a execução do app através de um contêiner e, para simplificar, apenas um banco local PostgreSQL é iniciado através do Docker.
+
+[subs="macros"]
+----
+$ cp link:Dockerfile.without-maven-build[] Dockerfile
+$ docker-compose up -d db
+----
+
+NOTE: Para acompanhar os logs do PostgreSQL você pode abrir um novo terminal e executar o comando `docker-compose logs -f db`.
+
+----
+$ mvn clean package
+$ mvn spring-boot:run
+----
+
+=== Ambiente de produção em contêiner (exige apenas que o Docker esteja instalado)
+
+Neste ambiente, que pode ser não apenas o de produção mas, também, o de integração contínua e testes (por exemplo), o Docker é utilizado para fazer o `build` da app e logo após disponibilizá-la em um contêiner próprio que terá um `link` com o contêiner do banco de dados PostgreSQL possibilitando sua execução.
+
+[subs="macros"]
+----
+$ cp link:Dockerfile.with-maven-build[] Dockerfile
+$ docker-compose up -d
+----
+
+NOTE: Este processo levará algum tempo, que pode ser reduzido caso o Maven esteja configurado para buscar os pacotes através de, por exemplo, um https://github.com/sonatype/docker-nexus3[Nexus local^]. O problema aqui ocorre quando o contêiner é inexistente ou precisa ser recriado na fase de `build`. Caso não exista um `settings.xml` apontando para um cache local de pacotes o Maven fará o "download do mundo" 😄.
+
+== Teste da API
+
+=== Através de um cliente escrito em Bash
+
+Você pode testar a API utilizando um shell script link:scripts/client.sh[] que criei.
+
+NOTE: Esse script utiliza o `curl`. Eu também deixei espaço para codificar chamadas através do https://httpie.org/[HTTPie^] embora, ainda, não tenha feito seu uso em quase nenhuma das chamadas `REST` executadas por ele.
+
+Exemplos de uso:
+
+==== Acesso a URL "top level" da API
+
+----
+$ ./scripts/client.sh top-level
+{
+  "_links" : {
+    "br-cities" : {
+      "href" : "http://localhost:8080/br-cities{?page,size,sort}",
+      "templated" : true
+    },
+    "profile" : {
+      "href" : "http://localhost:8080/profile"
+    }
+  }
+}
+----
+
+==== Listagem de todas as cidades brasileiras cadastradas
+
+----
+$ ./scripts/client.sh br-cities
+{
+  "_embedded" : {
+    "br-cities" : [ {
+      "state" : "SP",
+      "name" : "São Paulo",
+      "_links" : {
+        "self" : {
+          "href" : "http://localhost:8080/br-cities/3"
+        },
+        "br-city" : {
+          "href" : "http://localhost:8080/br-cities/3"
+        }
+      }
+    }, {
+      "state" : "RJ",
+      "name" : "Rio de Janeiro",
+      "_links" : {
+        "self" : {
+          "href" : "http://localhost:8080/br-cities/4"
+        },
+        "br-city" : {
+          "href" : "http://localhost:8080/br-cities/4"
+        }
+      }
+    }, {
+...
+----
+
+==== CRUD de cidades
+
+*`Create`* da "Cidade XPTO" de SP:
+
+----
+$ ./scripts/client.sh br-cities-create 'Cidade XPTO' SP
+HTTP/1.1 201
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+Location: http://localhost:8080/br-cities/6
+Content-Type: application/hal+json
+Transfer-Encoding: chunked
+Date: Wed, 17 Jun 2020 13:53:19 GMT
+
+{
+  "state" : "SP",
+  "name" : "Cidade XPTO",
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8080/br-cities/6"
+    },
+    "br-city" : {
+      "href" : "http://localhost:8080/br-cities/6"
+    }
+  }
+}
+----
+
+*`Retrieve`* da cidade de id "6":
+
+----
+$ ./scripts/client.sh br-cities-retrieve 6
+{
+  "state" : "SP",
+  "name" : "Cidade XPTO",
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8080/br-cities/6"
+    },
+    "br-city" : {
+      "href" : "http://localhost:8080/br-cities/6"
+    }
+  }
+}
+----
+
+*`Update`* da cidade de id "6":
+
+----
+$ ./scripts/client.sh br-cities-update 6 'Brasília' DF
+{
+  "state" : "DF",
+  "name" : "Brasília",
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8080/br-cities/6"
+    },
+    "br-city" : {
+      "href" : "http://localhost:8080/br-cities/6"
+    }
+  }
+}
+----
+
+*`Delete`* da cidade de id "1":
+
+----
+$ ./scripts/client.sh br-cities-delete 1
+----
+
+==== Listagem das cidades de um estado
+
+{TODO}
+
+==== CRUD de clientes
+
+{TODO}
+
+=== Através do maven (ou de um IDE)
+
+{TODO}
+
+=== Com o uso do Testcontainers
+
+{TODO}
+
+== Este projeto ...
+
+. Faz uso de código Java gerado através de um *outro projeto que criei* (em https://groovy-lang.org/[Groovy^]) e que:
+.. Gera https://docs.oracle.com/javase/tutorial/java/javaOO/enum.html[Java Enums^], usando a sintaxe do Java 8, para estados e regiões do Brazil.
+... Eles são criados a partir de uma API provida pelo IBGE.
+.. Demonstra o uso de algumas APIs do Groovy:
+... http://docs.groovy-lang.org/latest/html/gapi/groovy/util/ConfigSlurper.html[groovy.util.ConfigSlurper^]
+... http://docs.groovy-lang.org/2.4.0/html/gapi/groovy/json/JsonSlurper.html[groovy.json.JsonSlurper^]
+... https://docs.groovy-lang.org/latest/html/api/groovy/text/SimpleTemplateEngine.html[groovy.text.SimpleTemplateEngine^]
+.. Demonstra um teste bem simples, no estilo https://en.wikipedia.org/wiki/Behavior-driven_development[BDD^], utilizando as versões mais atuais do Groovy e do https://github.com/spockframework/spock[Spock Framework^].
+.. Demonstra como o https://gradle.org/[Gradle^] é configurado para isto.
+.. *[red]#Este é o projeto#*: https://github.com/paulojeronimo/java-enums-generator.
+. Utiliza o https://projectlombok.org/[Lombok^] para, através de https://docs.oracle.com/javase/8/docs/api/javax/annotation/processing/Processor.html[Java annotation processors^], evitar código repetitivo e desgastante.
+.. O Lombok tem plugins para vários IDEs, inclusive o IntelliJ IDEA que utilizo.
+. É gerado utilizando o release mais atual do Spring Boot (2.3.1).
+. Faz uso da versão 13 do JDK, em sua configuração no `pom.xml`:
+.. Apesar do projeto ter sido criando utilizando o https://github.com/spring-io/initializr[initilizr do Spring Boot^], via `curl`, e gerado na versão 14 do OpenJDK, o plugin do maven chamado gmavenplus, utilizado tornar possível a criação de testes através do Spock não suportou esta versão gerando um erro:
++
+----
+[ERROR] Failed to execute goal org.codehaus.gmavenplus:gmavenplus-plugin:1.9.0:compileTests (default) on project JavaProject: Execution default of goal org.codehaus.gmavenplus:gmavenplus-plugin:1.9.0:compileTests failed: Target bytecode 14 requires Groovy 3.0.0-beta-2 or newer. -> [Help 1]
+----
++
+.. Dessa forma, o `pom.xml` precisou de um `fall back` para a versão 13 que não gerou problemas.
+. Tentou utilizar o Groovy na versão 3.0.
+.. Eu queria ter conseguido isso usando o Maven, da mesma forma que consegui ao criar o projeto *java-enums-generator* utilizando o Gradle. Mas, não consegui configurar o Maven. Referências:
+... https://blog.solidsoft.pl/2020/06/16/what-happened-to-groovy-dependencies-in-spock-2.0/
+.. Ao ter que retornar o uso do Groovy para a versão 2.5, descobri que ele não oferece suporte a sintaxe 'Java 8 method reference'. Então, tive que alterar o https://github.com/paulojeronimo/java-enums-generator/blob/master/sample.test/src/test/groovy/com/example/JavaProject/enums/BRStateSpec.groovy[código de um teste que havia escrito com o Spock^] para link:src/test/groovy/com/example/JavaProject/BRStateSpockTest.groovy[uma uma nova sintaxe^]. Referências:
+... https://stackoverflow.com/questions/41398751/groovy-equivalent-of-java-8-double-colon-operator
+. Utiliza anotações de validação para as entidades.
+. Faz uso de uma anotação `@Converter` (do JPA 2.1) para persistir enumerados no banco de dados.
+. Cria APIs RESTful seguindo https://en.wikipedia.org/wiki/HATEOAS[o padrão HATEOAS^].
+.. Isso possibilita que, a partir do retorno de cada chamada REST seja possível termos links que transforam a API numa espécie de https://en.wikipedia.org/wiki/Hypermedia[hypermedia^].
+.. Tentei, sem sucesso, fazer uso do https://swagger.io/[Swagger^] para documentar a API.
+... O insucesso ocorreu mesmo tentando seguir algumas orientações descritas na https://github.com/springfox/springfox/issues/2932[issue 2932^].
+... Abortei essa missão para tentar novamente, em breve, fazer uso do https://springdoc.org[projeto springdoc] para fazer a documentação da API, como esperava fazer com o Swagger.
+.. O projeto faz uso da interface https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/PagingAndSortingRepository.html[PagingAndSortingRepository^] que auxilia na criação de componentes CRUD e na apresentação RESTful de acordo com esse padrão.
+. Tem suas tabelas gerenciadas pelo PostgreSQL que:
+.. É executado https://hub.docker.com/_/postgres[de forma conteinerizada^] através do https://docker.com[Docker^].
+.. Disponibiliza todos os dados fora do contêiner, em um volume acessível pelo sistema de arquivos dentro do diretório do projeto.
+... Dessa forma, se o contêiner for removido, todos os dados sobrevirerão a desastres.
+. Também utiliza o Docker e o https://docs.docker.com/compose/[Docker Compose^] para:
+.. Fazer um build (opcional) da aplicação diretamente a partir de um contêiner.
+.. Executar a aplicação através de um contêiner que, desta forma, pode ser orquestrado e gerenciado por Kubernetes, OpenStack, OpenShift, etc.

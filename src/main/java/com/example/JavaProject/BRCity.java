@@ -2,7 +2,6 @@ package com.example.JavaProject;
 
 import com.example.JavaProject.enums.BRState;
 import lombok.Data;
-import org.hibernate.validator.constraints.Range;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;

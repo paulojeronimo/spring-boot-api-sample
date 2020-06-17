@@ -36,11 +36,9 @@ test-br-cities-update-curl() {
   local id=$1
   local name=$2
   local state=$3
-  set -x
   curl -X PUT -H "Content-Type:application/json" \
     -d "{\"name\": \"$name\", \"state\": \"$state\"}" \
     $API/br-cities/$id
-  set +x
 }
 
 test-br-cities-patch-curl() {
