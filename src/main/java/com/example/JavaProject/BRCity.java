@@ -2,21 +2,19 @@ package com.example.JavaProject;
 
 import com.example.JavaProject.enums.BRState;
 import lombok.Data;
+import org.hibernate.validator.constraints.Range;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.validation.constraints.NotBlank;
+import javax.persistence.*;
+import javax.validation.constraints.Size;
 
 @Data
 @Entity
 public class BRCity {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @NotBlank(message = "State must be a valid Brazilian state")
+    @Enumerated(EnumType.STRING)
     private BRState state;
-    @NotBlank
+    @Size(min = 2, max = 30, message="City must have between {min} and {max} characters")
     private String name;
 }
