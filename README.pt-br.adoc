@@ -11,7 +11,10 @@ ifdef::backend-pdf[]
 :TODO: TODO
 endif::[]
 
-Este exemplo demonstra a criação de uma *API RESTful (e HATEOAS) utilizando o Spring Boot 2.3.1 e o Java 14*.
+:RESTFul: https://en.wikipedia.org/wiki/RESTful[RESTful^]
+:HATEOAS: https://en.wikipedia.org/wiki/HATEOAS[HATEOAS^]
+
+Este exemplo demonstra a criação de uma *API {RESTFul} (e {HATEOAS}) utilizando o Spring Boot 2.3.1 e o Java 14*.
 
 Essa é a primeira versão de um tutorial que estou criando para começar a explorar,
 aos poucos, as novas funcionalidades do Spring Boot 2.3 que o Phill Webb descreve
@@ -260,21 +263,25 @@ $ ./scripts/client.sh br-cities-delete 1
 
 == Este projeto ...
 
-. Faz uso de código Java gerado através de um *outro projeto que criei* (em https://groovy-lang.org/[Groovy^]) e que:
+. Faz uso de código Java gerado através de um outro projeto que criei nessa https://www.epochconverter.com/weeks/2020[semana 25 de 2020^], que chamei de https://github.com/paulojeronimo/java-enums-generator[java-enums-generator^] e o programei em https://groovy-lang.org/[Groovy^], e que:
 .. Gera https://docs.oracle.com/javase/tutorial/java/javaOO/enum.html[Java Enums^], usando a sintaxe do Java 8, para estados e regiões do Brazil.
 ... Eles são criados a partir de uma API provida pelo IBGE.
 .. Demonstra o uso de algumas APIs do Groovy:
 ... http://docs.groovy-lang.org/latest/html/gapi/groovy/util/ConfigSlurper.html[groovy.util.ConfigSlurper^]
 ... http://docs.groovy-lang.org/2.4.0/html/gapi/groovy/json/JsonSlurper.html[groovy.json.JsonSlurper^]
 ... https://docs.groovy-lang.org/latest/html/api/groovy/text/SimpleTemplateEngine.html[groovy.text.SimpleTemplateEngine^]
-.. Demonstra um teste bem simples, no estilo https://en.wikipedia.org/wiki/Behavior-driven_development[BDD^], utilizando as versões mais atuais do Groovy e do https://github.com/spockframework/spock[Spock Framework^].
+.. Demonstra um teste bem simples, no estilo https://en.wikipedia.org/wiki/Behavior-driven_development[BDD^], utilizando as versões mais atuais do Groovy e do https://github.com/spockframework/spock[Spock^].
 .. Demonstra como o https://gradle.org/[Gradle^] é configurado para isto.
-.. *[red]#Este é o projeto#*: https://github.com/paulojeronimo/java-enums-generator.
 . Utiliza o https://projectlombok.org/[Lombok^] para, através de https://docs.oracle.com/javase/8/docs/api/javax/annotation/processing/Processor.html[Java annotation processors^], evitar código repetitivo e desgastante.
 .. O Lombok tem plugins para vários IDEs, inclusive o IntelliJ IDEA que utilizo.
-. É gerado utilizando o release mais atual do Spring Boot (2.3.1).
-. Faz uso da versão 13 do JDK, em sua configuração no `pom.xml`:
-.. Apesar do projeto ter sido criando utilizando o https://github.com/spring-io/initializr[initilizr do Spring Boot^], via `curl`, e gerado na versão 14 do OpenJDK, o plugin do maven chamado gmavenplus, utilizado tornar possível a criação de testes através do Spock não suportou esta versão gerando um erro:
+. Foi gerado utilizando para a versão mais atual do Spring Boot, utilizando o https://github.com/spring-io/initializr[initilizr^] com o seguinte comando:
++
+----
+$ curl https://start.spring.io/starter.tgz -d javaVersion=14 -d artifactId=JavaProject -d dependencies=web,data-jpa,data-rest,validation -d bootVersion=2.3.1.RELEASE | tar -xzvf -
+----
++
+. Faz uso da versão 13 do JDK (na configuração no `pom.xml`):
+.. Apesar do projeto ter sido criando para a versão 14 do OpenJDK, o https://mvnrepository.com/artifact/org.codehaus.gmavenplus/gmavenplus-plugin[plugin gmavenplus], utilizado tornar possível a criação de testes através do Spock não suportou esta versão, gerando um erro na execução do Maven:
 +
 ----
 [ERROR] Failed to execute goal org.codehaus.gmavenplus:gmavenplus-plugin:1.9.0:compileTests (default) on project JavaProject: Execution default of goal org.codehaus.gmavenplus:gmavenplus-plugin:1.9.0:compileTests failed: Target bytecode 14 requires Groovy 3.0.0-beta-2 or newer. -> [Help 1]
@@ -282,13 +289,14 @@ $ ./scripts/client.sh br-cities-delete 1
 +
 .. Dessa forma, o `pom.xml` precisou de um `fall back` para a versão 13 que não gerou problemas.
 . Tentou utilizar o Groovy na versão 3.0.
-.. Eu queria ter conseguido isso usando o Maven, da mesma forma que consegui ao criar o projeto *java-enums-generator* utilizando o Gradle. Mas, não consegui configurar o Maven. Referências:
+.. Eu queria ter conseguido Spock no Maven, na versão `2.0-M3-groovy-3.0`, https://github.com/paulojeronimo/java-enums-generator/blob/master/sample.test/build.gradle[da mesma forma que consegui^] ao criar o projeto *java-enums-generator* (que usa o Gradle). Mas, perdi muito tentando fazer isso funcionar até desistir. Referências:
 ... https://blog.solidsoft.pl/2020/06/16/what-happened-to-groovy-dependencies-in-spock-2.0/
-.. Ao ter que retornar o uso do Groovy para a versão 2.5, descobri que ele não oferece suporte a sintaxe 'Java 8 method reference'. Então, tive que alterar o https://github.com/paulojeronimo/java-enums-generator/blob/master/sample.test/src/test/groovy/com/example/JavaProject/enums/BRStateSpec.groovy[código de um teste que havia escrito com o Spock^] para link:src/test/groovy/com/example/JavaProject/BRStateSpockTest.groovy[uma uma nova sintaxe^]. Referências:
+.. Por causa disso, precisei retornar a configuração do Groovy, no `pom.xml`, para a versão `1.3-groovy-2.5`.
+.. Ao retornar o Groovy para a versão 2.5, descobri que ele não oferece suporte a sintaxe 'Java 8 method reference' (isso só ocorre https://groovy-lang.org/releasenotes/groovy-3.0.html[a partir da versão 3.0 do Groovy]). E, por isso, tive que alterar o https://github.com/paulojeronimo/java-enums-generator/blob/master/sample.test/src/test/groovy/com/example/JavaProject/enums/BRStateSpec.groovy[código de um teste que havia escrito com o Spock^] para link:src/test/groovy/com/example/JavaProject/BRStateSpockTest.groovy[uma uma nova sintaxe^]. Referências:
 ... https://stackoverflow.com/questions/41398751/groovy-equivalent-of-java-8-double-colon-operator
 . Utiliza anotações de validação para as entidades.
 . Faz uso de uma anotação `@Converter` (do JPA 2.1) para persistir enumerados no banco de dados.
-. Cria APIs RESTful seguindo https://en.wikipedia.org/wiki/HATEOAS[o padrão HATEOAS^].
+. Cria APIs RESTful seguindo o padrão {HATEOAS}.
 .. Isso possibilita que, a partir do retorno de cada chamada REST seja possível termos links que transforam a API numa espécie de https://en.wikipedia.org/wiki/Hypermedia[hypermedia^].
 .. Tentei, sem sucesso, fazer uso do https://swagger.io/[Swagger^] para documentar a API.
 ... O insucesso ocorreu mesmo tentando seguir algumas orientações descritas na https://github.com/springfox/springfox/issues/2932[issue 2932^].
