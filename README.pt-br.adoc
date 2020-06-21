@@ -103,8 +103,24 @@ $ docker-compose up -d db
 ====
 
 ----
-$ mvn clean package
 $ mvn spring-boot:run
+----
+
+=== Testes
+
+É possível executar todos os testes, ou selectionar testes específicos, para serem executados. Utilizando o Maven, para executar o teste BRStateTest, por exemplo, esse é o comando:
+
+----
+$ mvn surefire:test -Dtest=com.example.JavaProject.BRStateTest test
+----
+
+Como ele é um teste unitário (`BRState` é apenas um enumerado) esse teste executará bem rapidamente.
+
+Outros exemplos:
+
+----
+$ mvn surefire:test -Dtest=com.example.JavaProject.BRCityRepositoryTest test
+$ mvn test
 ----
 
 === Ambiente de produção em contêiner (exige apenas que o Docker esteja instalado)
@@ -249,9 +265,81 @@ $ ./scripts/client.sh br-cities-update 6 'Brasília' DF
 $ ./scripts/client.sh br-cities-delete 1
 ----
 
+==== Listagem das cidades por nome
+
+----
+$ ./scripts/client.sh br-cities-search-findByName Trindade
+{
+  "_embedded" : {
+    "br-cities" : [ {
+      "state" : "GO",
+      "name" : "Trindade",
+      "_links" : {
+        "self" : {
+          "href" : "http://localhost:8080/br-cities/7"
+        },
+        "br-city" : {
+          "href" : "http://localhost:8080/br-cities/7"
+        }
+      }
+    }, {
+      "state" : "PE",
+      "name" : "Trindade",
+      "_links" : {
+        "self" : {
+          "href" : "http://localhost:8080/br-cities/8"
+        },
+        "br-city" : {
+          "href" : "http://localhost:8080/br-cities/8"
+        }
+      }
+    } ]
+  },
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8080/br-cities/search/findByName?name=Trindade"
+    }
+  }
+}
+----
+
 ==== Listagem das cidades de um estado
 
-{TODO}
+----
+$ ./scripts/client.sh br-cities-search-findByState SP
+{
+  "_embedded" : {
+    "br-cities" : [ {
+      "state" : "SP",
+      "name" : "São Paulo",
+      "_links" : {
+        "self" : {
+          "href" : "http://localhost:8080/br-cities/2"
+        },
+        "br-city" : {
+          "href" : "http://localhost:8080/br-cities/2"
+        }
+      }
+    }, {
+      "state" : "SP",
+      "name" : "Campinas",
+      "_links" : {
+        "self" : {
+          "href" : "http://localhost:8080/br-cities/4"
+        },
+        "br-city" : {
+          "href" : "http://localhost:8080/br-cities/4"
+        }
+      }
+    } ]
+  },
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8080/br-cities/search/findByState?state=SP"
+    }
+  }
+}
+----
 
 ==== CRUD de clientes
 

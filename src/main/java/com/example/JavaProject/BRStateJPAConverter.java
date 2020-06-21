@@ -3,7 +3,9 @@ package com.example.JavaProject;
 import com.example.JavaProject.enums.BRState;
 
 import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
 
+@Converter
 public class BRStateJPAConverter implements AttributeConverter<BRState, String> {
     @Override
     public String convertToDatabaseColumn(BRState brState) {

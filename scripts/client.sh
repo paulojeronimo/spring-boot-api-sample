@@ -59,7 +59,12 @@ test-br-cities-search-curl() {
   curl $API/br-cities/search
 }
 
-test-br-cities-search-findByLastName-curl() {
+test-br-cities-search-findByName-curl() {
+  local name="$1"
+  curl $API/br-cities/search/findByName?name="$name"
+}
+
+test-br-cities-search-findByState-curl() {
   local state="$1"
   curl $API/br-cities/search/findByState?state="$state"
 }

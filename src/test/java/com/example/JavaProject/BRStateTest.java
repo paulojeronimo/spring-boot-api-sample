@@ -1,15 +1,14 @@
 package com.example.JavaProject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import com.example.JavaProject.enums.BRRegion;
 import com.example.JavaProject.enums.BRState;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BRStateTest {
    private Map<BRRegion, List<BRState>> brStatesByRegion =
