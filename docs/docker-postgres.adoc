@@ -1,0 +1,122 @@
+= Uso do contêiner Docker do PostgreSQL deste projeto
+:toc:
+:toc-title: Conteúdo
+:icons: font
+:experimental:
+
+== Acessando o contêiner
+
+Logo após ter iniciado o banco de dados com o comando abaixo:
+
+----
+$ docker-compose up -d db
+----
+
+Você deve observar que um contêiner Docker para o PostgreSQL precisará estar em execução.  É fácil checar isso com o comando abaixo:
+
+----
+$ docker ps -a | grep `basename $PWD`_db
+1f6decb315f6        postgres            "docker-entrypoint.s…"   28 minutes ago      Up 28 minutes             0.0.0.0:5432->5432/tcp   spring-boot-api-sample_db_1
+----
+
+O Docker Compose, da maneira como foi configurado no arquivo link:../docker-compose.yml[], cria o contêiner utilizando o nome do diretório do projeto e mais o nome dado para o contêiner postgres (`db` no caso).
+
+NOTE: De fato, observe que todos os contêineres que serão criados para este projeto tem, como prefixo, o nome de seu diretório (identificado pela saída do comando `basename $PWD`.)
+
+Para acessar o shell do contêiner em execução (`spring-boot-api-sample_db_1`), execute:
+
+----
+$ docker exec -it spring-boot-api-sample_db_1 sh
+#
+----
+
+Você irá cair direto no promp de comando do PostgreSQL e, a partir daí, se você sabe o básico de PostgreSQL, já sabe o que fazer. Mas, se você não conhece o PostgreSQL, aqui vão alguns comandos básicos que irão lhe direcionar de forma que você consiga verificar, durante os testes desta aplicação, as informações que serão manipuladas por este banco de dados.
+
+== Comandos básicos do PostgreSQL
+
+=== Acesando o banco de dados da app (java-demo) com o seu usuário (java-db-user)
+
+----
+# psql -U java-db-user java-demo
+psql (12.3 (Debian 12.3-1.pgdg100+1))
+Type "help" for help.
+
+java-demo=#
+----
+
+=== Visualizando os dados
+
+----
+java-demo=# \dt
+           List of relations
+ Schema |  Name  | Type  |    Owner
+--------+--------+-------+--------------
+ public | brcity | table | java-db-user
+(1 row)
+----
+
+----
+java-demo=# select * from brcity;
+ id | name | state
+----+------+-------
+(0 rows)
+----
+
+==== Nota (para quando o é usada a propriedade "spring.jpa.hibernate.ddl-auto")
+
+Se adicionamos a linha https://docs.spring.io/autorepo/docs/spring-boot/2.3.1.RELEASE/reference/html/appendix-application-properties.html#core-properties["spring.jpa.hibernate.ddl-auto=create-drop"] no arquivo `src/main/resources/application.properties` as tabelas do banco serão criadas no momento da inicialização do Spring Boot.
+Obviamente, essa funcionalidade só é desejada em tempo de desenvolvimento.
+O Hibernate (a implementação de JPA usada pelo Spring Boot) determinará se criará esquema do banco de dados utilizando o valor dessa propriedade.
+Com o valor "create-drop" configurado, ao acessar o PostgreSQL notaremos a existência das seguintes tabelas quando a aplicação for iniciada:
+
+----
+java-demo=# \d+
+                              List of relations
+ Schema |     Name      |   Type   |    Owner     |    Size    | Description
+--------+---------------+----------+--------------+------------+-------------
+ public | brcity        | table    | java-db-user | 0 bytes    |
+ public | brcity_id_seq | sequence | java-db-user | 8192 bytes |
+(2 rows)
+----
+
+Além dessas tabelas, com o comando `\l`, é possível notar que outros objetos do banco são de propriedade do usuário `java-db-user`:
+
+----
+java-demo=# \l
+                                         List of databases
+   Name    |    Owner     | Encoding |  Collate   |   Ctype    |         Access privileges
+-----------+--------------+----------+------------+------------+-----------------------------------
+ java-demo | java-db-user | UTF8     | en_US.utf8 | en_US.utf8 |
+ postgres  | java-db-user | UTF8     | en_US.utf8 | en_US.utf8 |
+ template0 | java-db-user | UTF8     | en_US.utf8 | en_US.utf8 | =c/"java-db-user"                +
+           |              |          |            |            | "java-db-user"=CTc/"java-db-user"
+ template1 | java-db-user | UTF8     | en_US.utf8 | en_US.utf8 | =c/"java-db-user"                +
+           |              |          |            |            | "java-db-user"=CTc/"java-db-user"
+(4 rows)
+----
+
+Em ambiente de teste é interessante termos essa propriedade configurada.
+Testes integrados utilizando bancos de dados podem ser contruídos através
+de https://www.baeldung.com/spring-boot-data-sql-and-schema-sql[configurações em arquivos de propriedades ou em classes de teste^].
+Também é interessante https://www.baeldung.com/sql-logging-spring-boot[configurar a visualização de comandos SQL executados pelo Hibernate^].
+Neste projeto, é possível notarmos que foram realizadas configurações para isso, no arquivo `src/test/resources/application.properties`:
+
+----
+include::../src/test/resources/application.properties[]
+----
+
+Pode ser interessante termos
+https://dev.to/bgord/multiple-postgres-databases-in-a-single-docker-container-417l[um PostgreSQL executando dois bancos de dados, um de produção e um de testes^], utilizando um único contêiner.
+Mesmo dando a preferência pela execução de testes utilizando um banco de dados em memória,
+como o H2, ter um banco de testes pode ser interessante em algumas situações.
+
+=== Saindo do psql
+
+----
+java-demo=# \q
+# kbd:[<Ctrlr+D>]
+----
+
+=== Gostaria de usar uma solução gráfica (ou: não quero usar o psql)
+
+Baixe, instale e aprenda e use o https://www.pgadmin.org/[pgAdmin^].

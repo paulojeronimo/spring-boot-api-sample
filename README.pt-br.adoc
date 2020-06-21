@@ -96,7 +96,11 @@ $ cp link:Dockerfile.without-maven-build[] Dockerfile
 $ docker-compose up -d db
 ----
 
-NOTE: Para acompanhar os logs do PostgreSQL você pode abrir um novo terminal e executar o comando `docker-compose logs -f db`.
+[NOTE]
+====
+* Para acompanhar os logs do PostgreSQL você pode abrir um novo terminal e executar o comando `docker-compose logs -f db`.
+* Para obter mais detalhes sobre o uso do PostgreSQL através do Docker neste projeto leia este doc: link:docs/docker-postgres.adoc[].
+====
 
 ----
 $ mvn clean package

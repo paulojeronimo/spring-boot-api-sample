@@ -29,7 +29,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### This project ###
 /data
 /Dockerfile
 /*.html
 /*.pdf
+/docs/*.html
+/docs/*.pdf

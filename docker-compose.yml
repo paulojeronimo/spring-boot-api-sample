@@ -5,7 +5,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: java-demo
       POSTGRES_USER: java-db-user
@@ -20,3 +20,5 @@ services:
       SPRING_DATASOURCE_PASSWORD: db1234
     depends_on:
       - db
+volumes:
+  postgres-data:
