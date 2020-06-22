@@ -15,23 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DataJpaTest
 public class BRCityRepositoryTest {
 
-    enum Cities {
-        DF(1), SP(2), RJ(3), GO(1), PE(1);
-        private final int number;
-
-        Cities(int number) {
-            this.number = number;
-        }
-
-        static Stream<Cities> stream() {
-            return Stream.of(Cities.values());
-        }
-
-        static int total() {
-            return stream().mapToInt(i -> i.number).sum();
-        }
-    }
-
     @Autowired
     private BRCityRepository brCityRepository;
 
@@ -61,5 +44,22 @@ public class BRCityRepositoryTest {
     void should_have_the_expected_number_of_cities_by_state() {
         Cities.stream().
                 forEach(i -> assertEquals(i.number, brCityRepository.findByState(BRState.valueOf(i.name())).size()));
+    }
+
+    enum Cities {
+        DF(1), SP(2), RJ(3), GO(1), PE(1);
+        private final int number;
+
+        Cities(int number) {
+            this.number = number;
+        }
+
+        static Stream<Cities> stream() {
+            return Stream.of(Cities.values());
+        }
+
+        static int total() {
+            return stream().mapToInt(i -> i.number).sum();
+        }
     }
 }

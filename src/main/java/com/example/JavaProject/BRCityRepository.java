@@ -8,9 +8,8 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 import java.util.Set;
 
-@RepositoryRestResource(collectionResourceRel = "br-cities", itemResourceRel = "br-city", path="br-cities")
+@RepositoryRestResource(collectionResourceRel = "br-cities", itemResourceRel = "br-city", path = "br-cities")
 public interface BRCityRepository extends JpaRepository<BRCity, Integer> {
-    BRCity findById(int id);
     Set<BRCity> findByName(String name);
 
     @Query(value = "select c from BRCity c where c.state = :state")

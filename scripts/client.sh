@@ -2,79 +2,38 @@
 set -euo pipefail
 USE_HTTP=${USE_HTTP:-false}
 API=http://localhost:8080
+SCRIPTS="top-level br-cities customers"
 
-test-top-level-curl() {
-  curl $API
-}
+cd "$(dirname "$0")"
+for f in $SCRIPTS; do source "$PWD/$f.sh"; done
 
-test-top-level-http() {
-  http $API
-}
-
-test-br-cities-curl() {
-  curl $API/br-cities
-}
-
-test-br-cities-http() {
-  http $API/br-cities
-}
-
-test-br-cities-create-curl() {
-  local name=$1
-  local state=$2
-  curl -i -H "Content-Type:application/json" \
-    -d "{\"name\": \"$name\", \"state\": \"$state\"}" \
-    $API/br-cities
-}
-
-test-br-cities-retrieve-curl() {
-  local id=$1
-  curl $API/br-cities/$id
-}
-
-test-br-cities-update-curl() {
-  local id=$1
-  local name=$2
-  local state=$3
-  curl -X PUT -H "Content-Type:application/json" \
-    -d "{\"name\": \"$name\", \"state\": \"$state\"}" \
-    $API/br-cities/$id
-}
-
-test-br-cities-patch-curl() {
-  local id=$1
-  local name=$2
-  local state=$3
-  curl -X PATCH -H "Content-Type:application/json" \
-    -d "{\"name\": \"$name\", \"state\": \"$state\"}" \
-    $API/br-cities/$id
-}
-
-test-br-cities-delete-curl() {
-  local id=$1
-  curl -X DELETE $API/br-cities/$id
-}
-
-test-br-cities-search-curl() {
-  curl $API/br-cities/search
-}
-
-test-br-cities-search-findByName-curl() {
-  local name="$1"
-  curl $API/br-cities/search/findByName?name="$name"
-}
-
-test-br-cities-search-findByState-curl() {
-  local state="$1"
-  curl $API/br-cities/search/findByState?state="$state"
+check-tools() {
+  local dependency_not_found=false
+  which sed &> /dev/null || {
+    echo "Please, install sed!"
+    dependency_not_found=true
+  }
+  which curl &> /dev/null || {
+    echo "Please, install curl!"
+    dependency_not_found=true
+  }
+  which http &> /dev/null || {
+    echo "WARNING: HTTPie (https://httpie.org/) not installed, we'll use curl!"
+  }
+  which jq &> /dev/null || {
+    echo "Please, install jq! (https://stedolan.github.io/jq/)"
+    dependency_not_found=true
+  }
+  ! $dependency_not_found || exit 1
 }
 
 usage() {
   cat <<-EOF
-	Usage:
-	$ $0 <action> [parameters]
+	Usage: $0 <action> [-h | parameters]
 	Possible actions:
-$(sed -n '/^test-.*-curl/p' client.sh | sed 's/test-\(.*\)-curl.*/\1/g' | cat -n -)
+$(for f in $SCRIPTS; do
+sed -n '/^test-.*-curl/p' $f.sh | sed 's/test-\(.*\)-curl.*/\1/g'
+done | cat -n -)
 	EOF
   exit 0
 }
@@ -86,21 +45,22 @@ run-test() {
     echo "test-$action-$tool function not found!"
     exit 1
   }
-  test-$action-$tool "${@:-}"
+  if [ "${1:-}" = "-h" ]
+  then
+    type test-$action-$tool
+  else
+    test-$action-$tool "${@:-}"
+  fi
 }
 
-cd "`dirname "$0"`"
+check-tools
 action="${1:-}"
 shift || :
 [ "$action" ] || usage
 http_installed=true
 $USE_HTTP && {
-  which http &> /dev/null || {
-    echo "Warning: http not found, install it first! (https://httpie.org)"
-    echo "We'll fall back to curl ..."
-    http_installed=false
-  }
-} || which curl &> /dev/null || { echo "Install curl!"; exit 1; }
+  which http &> /dev/null || http_installed=false
+}
 if $USE_HTTP && $http_installed; then
   run-test http $action "${@:-}"
 else
