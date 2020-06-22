@@ -38,7 +38,7 @@ public class Customer {
     @Temporal(TemporalType.DATE)
     private Calendar birthday;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "city_id", referencedColumnName = "id",
         foreignKey = @ForeignKey(name = "fk_city"))
     private BRCity city;
