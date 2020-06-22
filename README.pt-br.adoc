@@ -106,23 +106,6 @@ $ docker-compose up -d db
 $ mvn spring-boot:run
 ----
 
-=== Testes
-
-É possível executar todos os testes, ou selectionar testes específicos, para serem executados. Utilizando o Maven, para executar o teste BRStateTest, por exemplo, esse é o comando:
-
-----
-$ mvn surefire:test -Dtest=com.example.JavaProject.BRStateTest test
-----
-
-Como ele é um teste unitário (`BRState` é apenas um enumerado) esse teste executará bem rapidamente.
-
-Outros exemplos:
-
-----
-$ mvn surefire:test -Dtest=com.example.JavaProject.BRCityRepositoryTest test
-$ mvn test
-----
-
 === Ambiente de produção em contêiner (exige apenas que o Docker esteja instalado)
 
 Neste ambiente, que pode ser não apenas o de produção mas, também, o de integração contínua e testes (por exemplo), o Docker é utilizado para fazer o `build` da app e logo após disponibilizá-la em um contêiner próprio que terá um `link` com o contêiner do banco de dados PostgreSQL possibilitando sua execução.
@@ -136,6 +119,56 @@ $ docker-compose up -d
 NOTE: Este processo levará algum tempo, que pode ser reduzido caso o Maven esteja configurado para buscar os pacotes através de, por exemplo, um https://github.com/sonatype/docker-nexus3[Nexus local^]. O problema aqui ocorre quando o contêiner é inexistente ou precisa ser recriado na fase de `build`. Caso não exista um `settings.xml` apontando para um cache local de pacotes o Maven fará o "download do mundo" 😄.
 
 == Teste da API
+
+=== Através de classes Java
+
+Neste projeto há testes unitários e de integração.
+Eles podem ser executados pelo maven (ou pelo IDE).
+Por exemplo, para executar o teste BRStateTest, esse é o comando:
+
+----
+$ mvn surefire:test -Dtest=com.example.JavaProject.BRStateTest test
+----
+
+Esse é um teste unitário (`BRState` é apenas um enumerado criado pelo projeto {java-enums-generator}.
+Logo, ele executará bem rápido.
+
+Outros exemplos de teste (de integração) disponíveis:
+
+----
+$ mvn surefire:test -Dtest=com.example.JavaProject.BRCityRepositoryTest test
+----
+
+----
+$ mvn surefire:test -Dtest=com.example.JavaProject.CustomerRepositoryTest test
+----
+
+Em resumo, até o momento, essas são as classes de teste disponíveis (em Groovy e em Java):
+
+----
+$ tree src/test/{groovy,java}
+src/test/groovy
+`-- com
+    `-- example
+        `-- JavaProject
+            `-- BRStateSpockTest.groovy
+src/test/java
+`-- com
+    `-- example
+        `-- JavaProject
+            |-- BRCityRepositoryTest.java
+            |-- BRStateTest.java
+            |-- CustomerRepositoryTest.java
+            `-- CustomerTest.java
+
+6 directories, 5 files
+----
+
+Para testar todo o código de uma vez só, execute:
+
+----
+$ mvn clean test
+----
 
 === Através de um cliente escrito em Bash
 
@@ -265,44 +298,6 @@ $ ./scripts/client.sh br-cities-update 6 'Brasília' DF
 $ ./scripts/client.sh br-cities-delete 1
 ----
 
-==== Listagem das cidades por nome
-
-----
-$ ./scripts/client.sh br-cities-search-findByName Trindade
-{
-  "_embedded" : {
-    "br-cities" : [ {
-      "state" : "GO",
-      "name" : "Trindade",
-      "_links" : {
-        "self" : {
-          "href" : "http://localhost:8080/br-cities/7"
-        },
-        "br-city" : {
-          "href" : "http://localhost:8080/br-cities/7"
-        }
-      }
-    }, {
-      "state" : "PE",
-      "name" : "Trindade",
-      "_links" : {
-        "self" : {
-          "href" : "http://localhost:8080/br-cities/8"
-        },
-        "br-city" : {
-          "href" : "http://localhost:8080/br-cities/8"
-        }
-      }
-    } ]
-  },
-  "_links" : {
-    "self" : {
-      "href" : "http://localhost:8080/br-cities/search/findByName?name=Trindade"
-    }
-  }
-}
-----
-
 ==== Listagem das cidades de um estado
 
 ----
@@ -343,11 +338,7 @@ $ ./scripts/client.sh br-cities-search-findByState SP
 
 ==== CRUD de clientes
 
-{TODO}
-
-=== Através do maven (ou de um IDE)
-
-{TODO}
+Veja o vídeo que demonstra sua execução, no https://www.youtube.com/user/paulojeronimo74[meu canal do YouTube^].
 
 === Com o uso do Testcontainers
 
